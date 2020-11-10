@@ -1,0 +1,5 @@
+= Effective Java
+v1.0, 2020-11-10
+:toc:
+
+include::item1.adoc[]
