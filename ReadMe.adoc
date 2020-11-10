@@ -1,5 +1,8 @@
 = Effective Java
 v1.0, 2020-11-10
 :toc:
+:toc-placement!:
+
+toc::[]
 
 include::item1.adoc[]
