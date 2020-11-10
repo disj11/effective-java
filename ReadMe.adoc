@@ -5,4 +5,5 @@ v1.0, 2020-11-10
 
 toc::[]
 
-include::item1.adoc[]
+== 챕터2: 객체의 생성과 소멸
+include::item1.adoc[leveloffset=+1]
