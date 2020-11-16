@@ -4,8 +4,6 @@ v1.0, 2020-11-17
 :toc-placement!:
 :doctype: book
 
-toc::[]
-
 == 번역 & 공부
 === link:effective-java/ReadMe.adoc[Effective Java] +
 === link:spring-boot-reference/ReadMe.md[Spring boot reference]
