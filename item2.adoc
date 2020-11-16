@@ -1,0 +1,48 @@
+= 생성자 파라미터가 많은 경우 빌더를 고려하라
+v1.0, 2020-11-16
+
+정적 팩토리와 생성자는 많은 수의 선택적 파라미터를 받아야 할 경우 불편함이 있다. `NutritionFacts` 클래스로 예를 들어보자.
+이 클래스에는 serving size, servings per container, calories per serving 의 필수 필드와 fat, cholesterol, sodium의 선택적 필드가 존재한다.
+
+[source, java]
+----
+public class NutritionFacts {
+    private final int servingSize;
+    private final int servings;
+    private final int calories;
+    private int fat;
+    private int cholesterol;
+    private int sodium;
+
+    public NutritionFacts(int servingSize, int servings, int calories, int fat, int cholestrerol, int sodium) {
+        this.servingSize = servingSize;
+        this.servings = servings;
+        this.calories = calories;
+        this.fat = fat;
+        this.cholestrerol = cholestrerol;
+        this.sodium = sodium;
+    } 
+}
+----
+
+== 1. 생성자를 사용할 경우
+[source, java]
+----
+NutritionFacts cocaCola = new NutritionFacts(240, 8, 100, 0, 35, 27);
+----
+
+생성자를 사용하는 경우 사용하지 않을 파라미터를 넘겨야 하는 경우가 발생한다. (위의 경우 사용하지 않을 fat 파라미터에 0을 넘김) 물론, fat를 제외한 생성자를 하나 더 추가해 기본값으로 0을 설정해 줄 수 있지만, 필드가 많아질수록 작성하기 힘들고, 알아보기 힘든 코드가 된다.
+
+== 2. JavaBean 패턴을 사용할 경우
+[source, java]
+----
+NutritionFacts cocaCola = new NutritionFacts();
+cocaCola.setServingSize(240);
+cocaCola.setServings(8);
+cocaCola.setCalories(100);
+cocaCola.setSodium(35);
+cocaCola.setCarbohydrate(27);
+----
+
+JavaBean 패턴은 자체적으로 심각한 결점을 갖는다.
+최종적인 구성을 위해 여러번의 호출이 필요하기 때문에, 객체 구성 과정에서 유효하지 않은 값을 가진 상태일 수 있다. 또, 불변 클래스로 사용할 수 없게 만들고, 스레드 안전성을 제공하기 위해 프로그래머의 추가적인 노력이 필요하다.
