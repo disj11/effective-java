@@ -1,0 +1,44 @@
+= private 생성자와 enum 타입을 사용하여 싱글톤으로 만들어라
+v1.0, 2020-12-03
+
+싱글톤은 딱 한번만 인스턴스화되는 클래스이다.
+보통 함수와 같이 상태가 없는 객체 또는 유니크한 시스템 컴포넌트를 싱글톤으로 만든다.
+클래스를 싱글톤으로 만들 경우, 해당 클래스가 인터페이스를 구현한 것이 아니라면 mock을 만들 수 없기 때문에 코드를 테스트하기 어려워진다.
+
+싱글톤 클래스를 만드는 방법은 일반적으로 두 가지가 존재한다.
+두 방법 모두 public static 멤버를 사용하여 인스턴스에 접근한다.
+
+== 1. static final 필드를 사용
+
+[source,java]
+----
+public class Elvis {
+    public static final Elvis INSTANCE = new Elvis();
+    private Elvis() {}
+}
+----
+
+첫번째 방법은 static final 필드를 사용하는 것이다.
+이 방법을 사용할 경우, 리플렉션 메서드인 `AccessibleObject.setAccessible`을 사용하는 경우를 제외한다면, 싱글톤을 보장 받을 수 있다. 이 또한 막고 싶다면, 생성자에서 두 번째 인스턴스가 생성될 때 Exception을 던지게 하는 방식으로 처리하면 된다.
+
+== 2. static factory 메서드 사용
+
+[source,java]
+----
+public class Elvis {
+    private static final Elvis INSTANCE = new Elvis();
+    private Elvis() {}
+
+    public static Elvis getInstance() {
+        return INSTANCE;
+    }
+}
+----
+
+static factory 메서드를 사용하여 싱글톤을 만들 경우, 첫번째 이점은 싱글톤 여부 결정의 유연성을 제공한다는 것이다. 더 이상 싱글톤 사용을 원하지 않는 경우, 클라이언트 코드의 수정 없이 이를 변경할 수 있다.
+
+두번째 이점은 `generic singleton factory`를 제공할 수 있다는 것이다.
+
+마지막 세번째 이점은 static factory 메서드를 `Elvis::instance`와 같이 메서드 레퍼런스로 사용할 수 있다는 것이다.
+
+이러한 장점을 사용할 일이 없다면, 처음에 설명한 static final 필드 접근 방식을 선택할 수 있다.
