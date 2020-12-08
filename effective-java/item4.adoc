@@ -1,0 +1,21 @@
+= private 생성자를 통해 인스턴스화를 막아라
+v1.0, 2020-12-08
+
+때때로 ``java.lang.Math``, ``java.util.Arrays.``, ``java.util.Collections``와 같이 static 메서드와 static 필드만으로 이루어진 클래스를 만들어야 할 때가 있다. 이러한 utility 클래스들은 인스턴스화 되는 것이 무의미하다.
+
+아무 생성자를 만들지 않는 경우, 컴파일러는 기본적으로 파라미터가 없는 public 생성자를 생성하기 때문에 이를 처리해주어야 한다.
+
+인스턴스화를 막기위해 abstract 클래스로 만드는 것을 생각해 볼 수 있지만, abstract 클래스는 상속을 통해 인스턴스를 만들 수 있기 때문에 사용할 수 없다. 이럴 때에는 private 생성자를 사용하는 것이 좋다.
+
+[source,java]
+----
+// Noninstantiable utility class
+public class UtilityClass {
+    // Suppress default constructor for noninstantiability
+    private UtilityClass() {
+        throw new AssertionError();
+    }
+}
+----
+
+AssertionError가 반드시 필요한 것은 아니지만, 실수로 클래스 내부에서 생성자를 호출하는 경우를 방지할 수 있다. 생성자를 명시적으로 제공하였으나, 사용할 수는 없으므로, 직관적이지 않기 때문에, 주석을 포함하는 것이 좋다.

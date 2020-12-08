@@ -7,4 +7,5 @@ v1.0, 2020-11-10
 == 챕터2: 객체의 생성과 소멸
 === link:item1.adoc[item1. 생성자 대신 정적 팩토리 메서드의 사용을 고려하라] +
 === link:item2.adoc[item2. 생성자 파라미터가 많은 경우 빌더를 고려하라] +
-=== link:item3.adoc[item2. private 생성자와 enum 타입을 사용하여 싱글톤으로 만들어라] +
+=== link:item3.adoc[item3. private 생성자와 enum 타입을 사용하여 싱글톤으로 만들어라] +
+=== link:item4.adoc[item4. private 생성자를 통해 인스턴스화를 막아라] +
