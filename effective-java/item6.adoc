@@ -1,0 +1,92 @@
+= 불필요한 객체의 생성을 피하라
+v1.0, 2020-12-15
+
+대부분의 경우 필요할때마다 객체를 생성하는 것 보다 객체를 재사용 하는 것이 더 적절하다. 재사용은 코드를 더 빠르고 세련되게 만들어준다. 불변 객체는 항상 재사용 될 수 있다. 몇 가지 예를 살펴보자.
+
+== String 객체
+[source]
+----
+String s = new String("bikini"); // 이렇게 사용하지 말자.
+----
+
+위의 코드는 실행될때마다 새로운 객체를 생성한다. 이러한 객체 생성은 불필요하다. loop 또는 자주 사용하는 메서드 내에서 이러한 사용은 수백만개의 불필요한 객체를 생성할 수 있다. 따라서 아래와 같이 사용하는 것이 좋다.
+
+[source]
+----
+String s = "bikini";
+----
+
+위의 코드는 실행될 때마다 객체가 생성되는 것을 피하고, 하나의 String 인스턴스만을 사용한다. 나아가, 자바 가상 머신에 이미 같은 문자열 리터럴이 존재한다면, 그 문자열을 재사용한다.
+
+== static factory 메서드
+
+생성자와 static factory 메서드를 둘 다 제공하는 불변 클래스의 경우, static factory 메서드를 사용하면 불필요한 객체 생성을 피할 수 있다. 예를 들어 ``Boolean(String)`` 생성자의 경우 java 9에서 deprecated 되었으며, ``Boolean.valueOf(String)``의 사용을 권한다. 생성자는 호출될 때마다 반드시 새로운 객체가 생성되어야 하지만, factory 메서드의 경우 그럴 필요가 없다.
+
+== 비용이 큰 객체
+
+비용이 큰 객체를 여러 번 사용해야 한다면, 재사용을 위해 캐시해두는 것이 좋다. 예를 들어보자.
+
+[source]
+----
+static boolean isRomanNumeral(String s) {
+    return s.matches("^(?=.)M*(C[MD]|D?C{0,3})" + "(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$");
+}
+----
+
+위 코드는 정규식을 사용하여 문자열이 로마 숫자를 표현한 것이지를 판별하는 메서드이다. 이 코드의 문제점은 ``String.matches`` 메서드에 의존한다는 것이다. **String.matches 는 정규식에 매치되는지 확인하는 가장 간단한 방법이지만, 성능이 중요한 경우, 반복적으로 사용하기에는 적당하지 않다.** String.matches 는 내부적으로 ``Pattern`` 객체를 생성하는데, Pattern 객체는 정규식을 유한 상태 기계로 컴파일 해야하는 비싼 객체이기 때문이다. 이를 개선하기 위해서는 아래와 같이 사용하는 것이 좋다.
+
+[source,java]
+----
+public class RomanNumerals {
+    private static final Pattern ROMAN = Pattern.compile( "^(?=.)M*(C[MD]|D?C{0,3})" + "(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$");
+
+    static boolean isRomanNumeral(String s) {
+        return ROMAN.matcher(s).matches();
+    }
+}
+----
+
+이 코드도 문제는 있다. isRomanNumeral 메서드를 사용하지 않는다면, ROMAN 필드는 불필요하다는 것이다. 이 문제는 게으른 초기화를 사용하여 해결할 수 있지만, 권장하지는 않는다. 게으른 초기화를 사용하여도 향상된 성능을 측정할 수 있는 방법이 없고, 코드만 복잡해지기 때문이다.
+
+== Adapter
+
+불변 객체의 경우 항상 안전하게 재사용할 수 있다. 하지만 명확하지 않고 직관적이지 않은 상황도 있을 수 있다. 예를 들어 ``Map`` 인터페이스의 ``keySet`` 메서드는 맵의 모든 키로 구성된 ``Set`` 뷰를 리턴해준다. ``keySet`` 메서드는 항상 새로운 ``Set`` 인스턴스를 생성할 것 같지만, 사실은 항상 같은 ``Set`` 인스턴스를 반환해준다.
+
+[source,java]
+----
+public class KeySetTest {
+    public static void main(String[] args) {
+        Map<String, Integer> keyMap = new HashMap<>();
+        keyMap.put("key1", 1);
+        keyMap.put("key2", 2);
+
+        Set<String> keys1 = keyMap.keySet();
+        Set<String> keys2 = keyMap.keySet();
+
+        names1.remove("key1");
+        System.out.println(keys1.size()); // 1
+        System.out.println(keys2.size()); // 1
+    }
+}
+----
+
+== autoboxing
+
+불필요한 객체를 생성하는 다른 방법은 ``autoboxing``이다. 오토박싱은 박싱과 언박싱을 자동으로 하여 프로그래머가 primitive 타입과 boxed primitive 타입을 혼합하여 사용할 수 있게 해준다. 이렇게 **오토박싱은 primitive 타입과 boxed primitive 타입의 경계를 흐리게 해 주지만, 그렇다고 타입의 구분이 없어지는 것은 아니다.** 아래의 예를 통해 알아보자.
+
+[source]
+----
+// 끔직할 정도로 느리다.
+private static long sum() {
+    Long sum = 0L;
+    for (long i = 0; i <= Integer.MAX_VALUE; i++)
+        sum += i;
+
+    return sum;
+}
+----
+
+위 코드는 올바른 답을 리턴하지만, 엄청나게 느리다. 변수 sum이 ``long`` 이 아닌 ``Long``으로 정의 되어 불필요한 Long 객체가 2^31^만큼 생성되기 때문이다. 이 코드를 실행해보니 약 6.3초가 걸렸다. 여기서 ``Long``을 primitive 타입인 ``long``으로만 바꾸어도 실행시간은 0.59초 정도로 줄어들게 된다. 이 결과에서 말해주듯 **boxed primitives보다는 primitives를 사용해야 하고, 의도치 않은 autoboxing에 주의해야 한다.**
+
+== 정리
+여태까지의 설명으로 객체의 생성은 비싸기 때문에 객체의 생성은 피해야 한다는 오류를 범하면 안된다. 생성자가 어떤 값 비싼 작업을 하지 않는 이상 객체의 생성은 그렇게 무거운 작업은 아니다. 프로그램의 명확성, 단순성, 성능 향상을 위해 객체를 생성하는 것은 일반적으로는 좋은 일이다. 마찬가지 이유로 객체가 아주 무겁지 않는 한 object pool을 만들어 객체를 관리하는 것은 좋지 못한 생각이다. 최신 JVM에는 이러한 객체를 위한 최적화된 garbage collectors도 구현되어 있다. database connection의 경우 connection 비용이 높기 때문에 이러한 방식을 사용하지만, 일반적인 경우 pool을 사용하게 되면 코드가 복잡해지고, 메모리 사용량이 높아지고, 성능이 저하된다.
