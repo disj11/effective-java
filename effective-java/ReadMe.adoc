@@ -11,3 +11,4 @@ v1.0, 2020-11-10
 === link:item4.adoc[item4. private 생성자를 통해 인스턴스화를 막아라] +
 === link:item5.adoc[item5. 의존성 주입을 선호하라] +
 === link:item6.adoc[item6. 불필요한 객체의 생성을 피하라] +
+=== link:item7.adoc[item7. 사용하지 않는 객체 레퍼런스를 제거하라] +

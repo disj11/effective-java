@@ -1,0 +1,56 @@
+= 사용하지 않는 객체 레퍼런스를 제거하라
+v1.0, 2020-12-17
+
+Java에는 메모리를 관리해주는 가비지 컬렉터가 존재한다. 이로 인해 메모리 관리를 하지 않아도 된다는 생각으로 이어지기 쉽다. 하지만 이는 잘못된 생각이다. 예제를 통하여 살펴보자.
+
+[source,java]
+----
+// Can you spot the "memory leak"?
+public class Stack {
+    private Object[] elements;
+    private int size = 0;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+
+    public Stack() {
+        elements = new Object[DEFAULT_INITIAL_CAPACITY];
+    }
+
+    public void push(Object e) {
+        ensureCapacity();
+        elements[size++] = e;
+    }
+
+    public Object pop() {
+        if (size == 0)
+            throw new EmptyStackException();
+        return elements[--size];
+    }
+
+    /**
+    * Ensure space for at least one more element, roughly
+    * doubling the capacity each time the array needs to grow.
+    */
+    private void ensureCapacity() {
+        if (elements.length == size)
+            elements = Arrays.copyOf(elements, 2 * size + 1);
+    }
+}
+----
+
+이 코드는 특별한 문제가 없는 것 처럼 보이지만, 메모리 누수가 발생하는 문제가 있다. 이는 가비지 컬렉션의 발생을 증가시키거나, 메모리의 사용량의 계속되는 증가로 프로그램 성능에 영향을 미칠 수 있다는 것이다. 극단적으로는 디스크 페이징, ``OutOfMemoryError``가 발생할 수도 있다.
+
+위 코드에서 메모리 누수가 일어나는 곳은 pop 메서드이다. pop 메서드를 호출하여 반환된 오브젝트는 메모리 정리가 되지 않는다. 클라이언트에서 이 객체의 사용이 끝났어도, 스택에서는 여전히 레퍼런스를 유지하고 있기 때문에다. 이 문제를 해결하기 위해서는 다음과 같이 코드를 수정하면 된다.
+
+[source]
+----
+public Object pop() {
+    if (size == 0)
+        throw new EmptyStackException();
+
+    Object result = elements[--size];
+    elements[size] = null; // Eliminate obsolete reference
+    return result;
+}
+----
+
+하지만 이것이 객체의 사용이 끝나면 항상 null로 초기화 하란 것은 아니다. **이러한 방식으로 객체의 참조를 무효화 하는것은 일반적이지 않은 예외적인 일이다.** 따라서 이를 남용해서는 안된다.
