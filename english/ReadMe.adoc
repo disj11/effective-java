@@ -1,0 +1,7 @@
+= Effective Java
+:toc:
+:toc-placement!:
+:doctype: book
+
+== Friends
+=== link:friends_s1_ep1.adoc[Friends S1 EP1]
